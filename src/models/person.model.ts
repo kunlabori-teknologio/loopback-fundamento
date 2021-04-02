@@ -1,6 +1,7 @@
 import {Entity, hasMany, model, property} from '@loopback/repository';
 import {CompanyHasPersonHasRole} from './company-has-person-has-role.model';
 import {PersonHasProfessionSpecialty} from './person-has-profession-specialty.model';
+import {CompanyHasPerson} from './company-has-person.model';
 
 @model()
 export class Person extends Entity {
@@ -56,16 +57,14 @@ export class Person extends Entity {
   })
   userExtendedId?: string;
 
-  @property({
-    type: 'string',
-  })
-  companyHasPersonId?: string;
-
   @hasMany(() => PersonHasProfessionSpecialty)
   personHasProfessionSpecialties: PersonHasProfessionSpecialty[];
 
   @hasMany(() => CompanyHasPersonHasRole)
   companyHasPersonHasRoles: CompanyHasPersonHasRole[];
+
+  @hasMany(() => CompanyHasPerson)
+  companyHasPeople: CompanyHasPerson[];
 
   constructor(data?: Partial<Person>) {
     super(data);

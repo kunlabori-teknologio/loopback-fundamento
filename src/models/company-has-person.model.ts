@@ -18,6 +18,11 @@ export class CompanyHasPerson extends Entity {
   @hasMany(() => Person)
   people: Person[];
 
+  @property({
+    type: 'string',
+  })
+  personId?: string;
+
   constructor(data?: Partial<CompanyHasPerson>) {
     super(data);
   }

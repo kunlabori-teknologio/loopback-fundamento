@@ -54,3 +54,4 @@ export * from './payment-payment-has-bank-slip.controller';
 export * from './bank-slip-payment-has-bank-slip.controller';
 export * from './payment-service-payment.controller';
 export * from './user-has-service-service-payment.controller';
+export * from './person-company-has-person.controller';
