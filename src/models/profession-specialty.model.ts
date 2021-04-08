@@ -1,4 +1,4 @@
-import {Entity, model, property, hasMany} from '@loopback/repository';
+import {Entity, hasMany, model, property} from '@loopback/repository';
 import {PersonHasProfessionSpecialty} from './person-has-profession-specialty.model';
 
 @model()
@@ -20,6 +20,18 @@ export class ProfessionSpecialty extends Entity {
     type: 'string',
   })
   description?: string;
+
+  @property({
+    type: 'string',
+    required: true,
+  })
+  code: string;
+
+  @property({
+    type: 'string',
+    required: true,
+  })
+  country: string;
 
   @property({
     type: 'string',

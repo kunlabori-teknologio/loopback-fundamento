@@ -1,7 +1,7 @@
 import {Entity, hasMany, model, property} from '@loopback/repository';
 import {CompanyHasPersonHasRole} from './company-has-person-has-role.model';
-import {PersonHasProfessionSpecialty} from './person-has-profession-specialty.model';
 import {CompanyHasPerson} from './company-has-person.model';
+import {PersonHasProfessionSpecialty} from './person-has-profession-specialty.model';
 
 @model()
 export class Person extends Entity {
@@ -37,7 +37,7 @@ export class Person extends Entity {
   gender: string;
 
   @property({
-    type: 'string',
+    type: 'date',
     required: true,
   })
   birthdate: string;
