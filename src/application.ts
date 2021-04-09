@@ -1,4 +1,4 @@
-import {AuthenticationComponent} from '@loopback/authentication';
+import {AuthenticationComponent, registerAuthenticationStrategy} from '@loopback/authentication';
 import {
   JWTAuthenticationComponent, UserServiceBindings
 } from '@loopback/authentication-jwt';
@@ -14,6 +14,7 @@ import {ServiceMixin} from '@loopback/service-proxy';
 import path from 'path';
 import {MongodbDataSource} from './datasources';
 import {MySequence} from './sequence';
+import {AutentikigoStrategy} from './strategies/autentikigo-strategy';
 
 export {ApplicationConfig};
 
@@ -53,6 +54,7 @@ export class LoopbackFundamentoApplication extends BootMixin(
     this.component(JWTAuthenticationComponent);
     // Bind datasource
     this.dataSource(MongodbDataSource, UserServiceBindings.DATASOURCE_NAME);
+    registerAuthenticationStrategy(this, AutentikigoStrategy);
     // ------------- END OF SNIPPET -------------
   }
 }
