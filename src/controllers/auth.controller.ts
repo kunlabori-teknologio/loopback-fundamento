@@ -2,7 +2,7 @@
 
 import {inject} from '@loopback/core';
 import {Entity, model, property} from '@loopback/repository';
-import {getModelSchemaRef, post, requestBody, Response, RestBindings} from '@loopback/rest';
+import {getModelSchemaRef, param, post, requestBody, Response, RestBindings} from '@loopback/rest';
 import _ from 'lodash';
 
 // Autentikigo package
@@ -29,13 +29,14 @@ export class SignupSchema extends Entity {
     type: 'string',
     required: true,
   })
-  idNumber: string;
+  uniqueId: string;
 
   @property({
     type: 'string',
     required: true,
+    description: 'DD/MM/AAAA'
   })
-  birthDate: string;
+  birthday: string;
 
   @property({
     type: 'string',
@@ -55,7 +56,7 @@ export class AuthController {
     @inject(RestBindings.Http.RESPONSE) private response: Response
   ) { }
 
-  @post('/login')
+  @post('auth/login')
   async login(
     @requestBody({
       content: {
@@ -95,7 +96,7 @@ export class AuthController {
     return this.response;
   }
 
-  @post('/register')
+  @post('auth/register')
   async signup(
     @requestBody({
       content: {
@@ -109,13 +110,10 @@ export class AuthController {
 
     const signup = await autentikigo.register(
       {
-        idNumber: signupRequest.idNumber,
-        birthDate: signupRequest.birthDate,
+        uniqueId: signupRequest.uniqueId,
+        birthday: signupRequest.birthday,
         email: signupRequest.email,
         password: signupRequest.password,
-        clientId: process.env.AUTENTIKIGO_CLIENT_ID,
-        jwtSecret: process.env.AUTENTIKIGO_JWT_SECRET,
-        jwtRefreshSecret: process.env.AUTENTIKIGO_JWT_REFRESH_SECRET,
         cpfApiEndpoint: process.env.AUTENTIKIGO_CPF_API_ENDPOINT,
       },
       {
@@ -133,6 +131,69 @@ export class AuthController {
         }
         :
         signup.data
+    );
+
+    return this.response;
+  }
+
+  @post('auth/authorize/{userId}')
+  async authorizeUser(
+    @param.path.string('userId') userId: string,
+  ): Promise<Response> {
+
+    const authorize = await autentikigo.authorizeCompany(
+      {
+        userId: userId,
+        verified: true,
+        clientId: process.env.AUTENTIKIGO_CLIENT_ID,
+      },
+      {
+        connectionString: process.env.AUTENTIKIGO_CONNECTION_STRING
+      }
+    );
+
+    this.response.status(authorize.code).send(
+      _.isEmpty(authorize.data) ?
+        {
+          "error": {
+            "statusCode": authorize.code,
+            "message": authorize.message
+          }
+        }
+        :
+        authorize.data
+    );
+
+    return this.response;
+  }
+
+  @post('auth/admin-authorize/{userId}')
+  async authorizeAdminUser(
+    @param.path.string('userId') userId: string,
+  ): Promise<Response> {
+
+    const authorize = await autentikigo.authorizeCompany(
+      {
+        userId: userId,
+        verified: true,
+        role: 'admin',
+        clientId: process.env.AUTENTIKIGO_CLIENT_ID,
+      },
+      {
+        connectionString: process.env.AUTENTIKIGO_CONNECTION_STRING
+      }
+    );
+
+    this.response.status(authorize.code).send(
+      _.isEmpty(authorize.data) ?
+        {
+          "error": {
+            "statusCode": authorize.code,
+            "message": authorize.message
+          }
+        }
+        :
+        authorize.data
     );
 
     return this.response;
