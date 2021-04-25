@@ -2,11 +2,11 @@
 
 import {inject} from '@loopback/core';
 import {Entity, model, property} from '@loopback/repository';
-import {getModelSchemaRef, param, post, requestBody, Response, RestBindings} from '@loopback/rest';
+import {get, getModelSchemaRef, param, post, requestBody, Response, RestBindings} from '@loopback/rest';
 import _ from 'lodash';
 
 // Autentikigo package
-const autentikigo = require('../../../autentikigo-package/index');
+const autentikigo = require('autentikigo');
 
 @model()
 export class LoginSchema extends Entity {
@@ -194,6 +194,37 @@ export class AuthController {
         }
         :
         authorize.data
+    );
+
+    return this.response;
+  }
+
+  @get('auth/getUser/{token}')
+  async getUserInfo(
+    @param.path.string('token') token: string,
+  ): Promise<Response> {
+
+    const user = await autentikigo.getUserInfo(
+      {
+        token: token,
+        jwtSecret: process.env.AUTENTIKIGO_JWT_SECRET,
+        clientId: process.env.AUTENTIKIGO_CLIENT_ID,
+      },
+      {
+        connectionString: process.env.AUTENTIKIGO_CONNECTION_STRING
+      }
+    );
+
+    this.response.status(user.code).send(
+      _.isEmpty(user.data) ?
+        {
+          "error": {
+            "statusCode": user.code,
+            "message": user.message
+          }
+        }
+        :
+        user.data
     );
 
     return this.response;
