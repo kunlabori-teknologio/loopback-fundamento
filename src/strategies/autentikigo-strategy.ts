@@ -5,7 +5,7 @@ import {securityId, UserProfile} from '@loopback/security';
 import {verify} from 'jsonwebtoken';
 import * as acl from './acl';
 
-const autentikigo = require('../../../autentikigo-package/index');
+const autentikigo = require('autentikigo');
 
 @model()
 export class User implements UserProfile {
