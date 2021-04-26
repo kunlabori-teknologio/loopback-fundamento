@@ -1,19 +1,22 @@
-import {AuthenticationComponent, registerAuthenticationStrategy} from '@loopback/authentication';
 import {
-  JWTAuthenticationComponent, UserServiceBindings
+  AuthenticationComponent,
+  registerAuthenticationStrategy,
+} from '@loopback/authentication';
+import {
+  JWTAuthenticationComponent,
+  UserServiceBindings,
 } from '@loopback/authentication-jwt';
 import {BootMixin} from '@loopback/boot';
 import {ApplicationConfig} from '@loopback/core';
 import {RepositoryMixin} from '@loopback/repository';
-import {RestApplication} from '@loopback/rest';
+import {DefaultSequence, RestApplication} from '@loopback/rest';
 import {
   RestExplorerBindings,
-  RestExplorerComponent
+  RestExplorerComponent,
 } from '@loopback/rest-explorer';
 import {ServiceMixin} from '@loopback/service-proxy';
 import path from 'path';
 import {MongodbDataSource} from './datasources';
-import {MySequence} from './sequence';
 import {AutentikigoStrategy} from './strategies/autentikigo-strategy';
 
 export {ApplicationConfig};
@@ -25,7 +28,7 @@ export class LoopbackFundamentoApplication extends BootMixin(
     super(options);
 
     // Set up the custom sequence
-    this.sequence(MySequence);
+    this.sequence(DefaultSequence);
 
     // Set up default home page
     this.static('/', path.join(__dirname, '../public'));

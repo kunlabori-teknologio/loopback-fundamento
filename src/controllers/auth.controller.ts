@@ -1,9 +1,20 @@
 // Uncomment these imports to begin using these cool features!
 
-import {inject} from '@loopback/core';
+import {inject, service} from '@loopback/core';
 import {Entity, model, property} from '@loopback/repository';
-import {get, getModelSchemaRef, param, post, requestBody, Response, RestBindings} from '@loopback/rest';
+import {
+  get,
+  getModelSchemaRef,
+  param,
+  post,
+  requestBody,
+  Response,
+  RestBindings,
+} from '@loopback/rest';
 import _ from 'lodash';
+import {UserPermission} from '../models';
+import {AuthService} from '../services/auth.service';
+import {defaultPermissions} from '../utils/auth.data';
 
 // Autentikigo package
 const autentikigo = require('autentikigo');
@@ -21,7 +32,7 @@ export class LoginSchema extends Entity {
     required: true,
   })
   password: string;
-};
+}
 
 @model()
 export class SignupSchema extends Entity {
@@ -34,7 +45,7 @@ export class SignupSchema extends Entity {
   @property({
     type: 'string',
     required: true,
-    description: 'DD/MM/AAAA'
+    description: 'DD/MM/AAAA',
   })
   birthday: string;
 
@@ -49,12 +60,13 @@ export class SignupSchema extends Entity {
     required: true,
   })
   password: string;
-};
+}
 
 export class AuthController {
   constructor(
-    @inject(RestBindings.Http.RESPONSE) private response: Response
-  ) { }
+    @inject(RestBindings.Http.RESPONSE) private response: Response,
+    @service(AuthService) public authService: AuthService,
+  ) {}
 
   @post('auth/login')
   async login(
@@ -67,33 +79,20 @@ export class AuthController {
     })
     loginRequest: LoginSchema,
   ): Promise<Response> {
-
-    const login = await autentikigo.login(
+    const {data, code} = await autentikigo.login(
       {
         user: loginRequest.user,
         password: loginRequest.password,
         clientId: process.env.AUTENTIKIGO_CLIENT_ID,
         jwtSecret: process.env.AUTENTIKIGO_JWT_SECRET,
-        jwtRefreshSecret: process.env.AUTENTIKIGO_JWT_REFRESH_SECRET
+        jwtRefreshSecret: process.env.AUTENTIKIGO_JWT_REFRESH_SECRET,
       },
       {
-        connectionString: process.env.AUTENTIKIGO_CONNECTION_STRING
-      }
+        connectionString: process.env.AUTENTIKIGO_CONNECTION_STRING,
+      },
     );
 
-    this.response.status(login.code).send(
-      _.isEmpty(login.data) ?
-        {
-          "error": {
-            "statusCode": login.code,
-            "message": login.message
-          }
-        }
-        :
-        login.data
-    );
-
-    return this.response;
+    return this.response.status(code).send(data);
   }
 
   @post('auth/register')
@@ -107,7 +106,6 @@ export class AuthController {
     })
     signupRequest: SignupSchema,
   ): Promise<Response> {
-
     const signup = await autentikigo.register(
       {
         uniqueId: signupRequest.uniqueId,
@@ -117,20 +115,19 @@ export class AuthController {
         cpfApiEndpoint: process.env.AUTENTIKIGO_CPF_API_ENDPOINT,
       },
       {
-        connectionString: process.env.AUTENTIKIGO_CONNECTION_STRING
-      }
+        connectionString: process.env.AUTENTIKIGO_CONNECTION_STRING,
+      },
     );
 
     this.response.status(signup.code).send(
-      _.isEmpty(signup.data) ?
-        {
-          "error": {
-            "statusCode": signup.code,
-            "message": signup.message
+      _.isEmpty(signup.data)
+        ? {
+            error: {
+              statusCode: signup.code,
+              message: signup.message,
+            },
           }
-        }
-        :
-        signup.data
+        : signup.data,
     );
 
     return this.response;
@@ -140,7 +137,6 @@ export class AuthController {
   async authorizeUser(
     @param.path.string('userId') userId: string,
   ): Promise<Response> {
-
     const authorize = await autentikigo.authorizeCompany(
       {
         userId: userId,
@@ -148,20 +144,19 @@ export class AuthController {
         clientId: process.env.AUTENTIKIGO_CLIENT_ID,
       },
       {
-        connectionString: process.env.AUTENTIKIGO_CONNECTION_STRING
-      }
+        connectionString: process.env.AUTENTIKIGO_CONNECTION_STRING,
+      },
     );
 
     this.response.status(authorize.code).send(
-      _.isEmpty(authorize.data) ?
-        {
-          "error": {
-            "statusCode": authorize.code,
-            "message": authorize.message
+      _.isEmpty(authorize.data)
+        ? {
+            error: {
+              statusCode: authorize.code,
+              message: authorize.message,
+            },
           }
-        }
-        :
-        authorize.data
+        : authorize.data,
     );
 
     return this.response;
@@ -171,7 +166,6 @@ export class AuthController {
   async authorizeAdminUser(
     @param.path.string('userId') userId: string,
   ): Promise<Response> {
-
     const authorize = await autentikigo.authorizeCompany(
       {
         userId: userId,
@@ -180,20 +174,19 @@ export class AuthController {
         clientId: process.env.AUTENTIKIGO_CLIENT_ID,
       },
       {
-        connectionString: process.env.AUTENTIKIGO_CONNECTION_STRING
-      }
+        connectionString: process.env.AUTENTIKIGO_CONNECTION_STRING,
+      },
     );
 
     this.response.status(authorize.code).send(
-      _.isEmpty(authorize.data) ?
-        {
-          "error": {
-            "statusCode": authorize.code,
-            "message": authorize.message
+      _.isEmpty(authorize.data)
+        ? {
+            error: {
+              statusCode: authorize.code,
+              message: authorize.message,
+            },
           }
-        }
-        :
-        authorize.data
+        : authorize.data,
     );
 
     return this.response;
@@ -203,30 +196,22 @@ export class AuthController {
   async getUserInfo(
     @param.path.string('token') token: string,
   ): Promise<Response> {
-
-    const user = await autentikigo.getUserInfo(
+    const {data, code} = await autentikigo.getUserInfo(
       {
         token: token,
         jwtSecret: process.env.AUTENTIKIGO_JWT_SECRET,
         clientId: process.env.AUTENTIKIGO_CLIENT_ID,
       },
       {
-        connectionString: process.env.AUTENTIKIGO_CONNECTION_STRING
-      }
+        connectionString: process.env.AUTENTIKIGO_CONNECTION_STRING,
+      },
     );
 
-    this.response.status(user.code).send(
-      _.isEmpty(user.data) ?
-        {
-          "error": {
-            "statusCode": user.code,
-            "message": user.message
-          }
-        }
-        :
-        user.data
-    );
+    // Get permissions from autentikigo
+    const permissions = defaultPermissions as UserPermission[];
 
-    return this.response;
+    const routes = this.authService.getRoutesFromPermissions(permissions);
+
+    return this.response.status(code).send({...data, permissions, routes});
   }
 }
