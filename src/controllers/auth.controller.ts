@@ -214,4 +214,36 @@ export class AuthController {
 
     return this.response.status(code).send({...data, permissions, routes});
   }
+
+  @get('auth/refreshToken/{refreshToken}')
+  async refreshToken(
+    @param.path.string('refreshToken') refreshToken: string,
+  ): Promise<Response> {
+
+    const newToken = await autentikigo.refreshToken(
+      {
+        refreshToken: refreshToken,
+        jwtSecret: process.env.AUTENTIKIGO_JWT_SECRET,
+        jwtRefreshSecret: process.env.AUTENTIKIGO_JWT_REFRESH_SECRET,
+        clientId: process.env.AUTENTIKIGO_CLIENT_ID,
+      },
+      {
+        connectionString: process.env.AUTENTIKIGO_CONNECTION_STRING
+      }
+    );
+
+    this.response.status(newToken.code).send(
+      _.isEmpty(newToken.data) ?
+        {
+          "error": {
+            "statusCode": newToken.code,
+            "message": newToken.message
+          }
+        }
+        :
+        newToken.data
+    );
+
+    return this.response;
+  }
 }
