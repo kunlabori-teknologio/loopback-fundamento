@@ -9,12 +9,10 @@ import {
   post,
   requestBody,
   Response,
-  RestBindings,
+  RestBindings
 } from '@loopback/rest';
 import _ from 'lodash';
-import {UserPermission} from '../models';
 import {AuthService} from '../services/auth.service';
-import {defaultPermissions} from '../utils/auth.data';
 
 // Autentikigo package
 const autentikigo = require('autentikigo');
@@ -62,11 +60,33 @@ export class SignupSchema extends Entity {
   password: string;
 }
 
+@model()
+export class AuthorizeSchema extends Entity {
+
+  @property({
+    type: 'string',
+    required: true,
+  })
+  userId: string;
+
+  @property({
+    type: 'boolean',
+    required: true,
+  })
+  verified: boolean;
+
+  @property({
+    type: 'string',
+    required: true,
+  })
+  acl: string;
+}
+
 export class AuthController {
   constructor(
     @inject(RestBindings.Http.RESPONSE) private response: Response,
     @service(AuthService) public authService: AuthService,
-  ) {}
+  ) { }
 
   @post('auth/login')
   async login(
@@ -83,7 +103,7 @@ export class AuthController {
       {
         user: loginRequest.user,
         password: loginRequest.password,
-        clientId: process.env.AUTENTIKIGO_CLIENT_ID,
+        projectId: process.env.AUTENTIKIGO_PROJECT_ID,
         jwtSecret: process.env.AUTENTIKIGO_JWT_SECRET,
         jwtRefreshSecret: process.env.AUTENTIKIGO_JWT_REFRESH_SECRET,
       },
@@ -122,26 +142,34 @@ export class AuthController {
     this.response.status(signup.code).send(
       _.isEmpty(signup.data)
         ? {
-            error: {
-              statusCode: signup.code,
-              message: signup.message,
-            },
-          }
+          error: {
+            statusCode: signup.code,
+            message: signup.message,
+          },
+        }
         : signup.data,
     );
 
     return this.response;
   }
 
-  @post('auth/authorize/{userId}')
+  @post('auth/authorize')
   async authorizeUser(
-    @param.path.string('userId') userId: string,
+    @requestBody({
+      content: {
+        'application/json': {
+          schema: getModelSchemaRef(AuthorizeSchema),
+        },
+      },
+    })
+    authorizeRequest: AuthorizeSchema,
   ): Promise<Response> {
-    const authorize = await autentikigo.authorizeCompany(
+    const authorize = await autentikigo.authorizeProject(
       {
-        userId: userId,
-        verified: true,
-        clientId: process.env.AUTENTIKIGO_CLIENT_ID,
+        userId: authorizeRequest.userId,
+        verified: authorizeRequest.verified,
+        acl: authorizeRequest.acl,
+        projectId: process.env.AUTENTIKIGO_PROJECT_ID,
       },
       {
         connectionString: process.env.AUTENTIKIGO_CONNECTION_STRING,
@@ -151,41 +179,11 @@ export class AuthController {
     this.response.status(authorize.code).send(
       _.isEmpty(authorize.data)
         ? {
-            error: {
-              statusCode: authorize.code,
-              message: authorize.message,
-            },
-          }
-        : authorize.data,
-    );
-
-    return this.response;
-  }
-
-  @post('auth/admin-authorize/{userId}')
-  async authorizeAdminUser(
-    @param.path.string('userId') userId: string,
-  ): Promise<Response> {
-    const authorize = await autentikigo.authorizeCompany(
-      {
-        userId: userId,
-        verified: true,
-        role: 'admin',
-        clientId: process.env.AUTENTIKIGO_CLIENT_ID,
-      },
-      {
-        connectionString: process.env.AUTENTIKIGO_CONNECTION_STRING,
-      },
-    );
-
-    this.response.status(authorize.code).send(
-      _.isEmpty(authorize.data)
-        ? {
-            error: {
-              statusCode: authorize.code,
-              message: authorize.message,
-            },
-          }
+          error: {
+            statusCode: authorize.code,
+            message: authorize.message,
+          },
+        }
         : authorize.data,
     );
 
@@ -200,7 +198,7 @@ export class AuthController {
       {
         token: token,
         jwtSecret: process.env.AUTENTIKIGO_JWT_SECRET,
-        clientId: process.env.AUTENTIKIGO_CLIENT_ID,
+        projectId: process.env.AUTENTIKIGO_PROJECT_ID,
       },
       {
         connectionString: process.env.AUTENTIKIGO_CONNECTION_STRING,
@@ -208,11 +206,12 @@ export class AuthController {
     );
 
     // Get permissions from autentikigo
-    const permissions = defaultPermissions as UserPermission[];
+    // const permissions = defaultPermissions as UserPermission[];
 
-    const routes = this.authService.getRoutesFromPermissions(permissions);
+    // const routes = this.authService.getRoutesFromPermissions(permissions);
 
-    return this.response.status(code).send({...data, permissions, routes});
+    // return this.response.status(code).send({...data, permissions, routes});
+    return this.response.status(code).send(data);
   }
 
   @get('auth/refreshToken/{refreshToken}')
@@ -225,7 +224,7 @@ export class AuthController {
         refreshToken: refreshToken,
         jwtSecret: process.env.AUTENTIKIGO_JWT_SECRET,
         jwtRefreshSecret: process.env.AUTENTIKIGO_JWT_REFRESH_SECRET,
-        clientId: process.env.AUTENTIKIGO_CLIENT_ID,
+        projectId: process.env.AUTENTIKIGO_PROJECT_ID,
       },
       {
         connectionString: process.env.AUTENTIKIGO_CONNECTION_STRING

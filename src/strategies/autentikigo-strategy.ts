@@ -37,7 +37,7 @@ export class AutentikigoStrategy implements AuthenticationStrategy {
           token: token,
           jwtSecret: process.env.AUTENTIKIGO_JWT_SECRET,
           userId: (<any>decoded).id,
-          clientId: process.env.AUTENTIKIGO_CLIENT_ID,
+          clientId: process.env.AUTENTIKIGO_PROJECT_ID,
           roles: acl.roles,
           endpoint: request.path,
           method: request.method,
