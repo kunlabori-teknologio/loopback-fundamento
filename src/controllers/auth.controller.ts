@@ -82,6 +82,26 @@ export class AuthorizeSchema extends Entity {
   acl: string;
 }
 
+@model()
+export class PasswordRecoveryTokenSchema extends Entity {
+
+  @property({
+    type: 'string',
+    required: true,
+  })
+  email: string;
+}
+
+@model()
+export class RecoverPasswordSchema extends Entity {
+
+  @property({
+    type: 'string',
+    required: true,
+  })
+  newPassword: string;
+}
+
 export class AuthController {
   constructor(
     @inject(RestBindings.Http.RESPONSE) private response: Response,
@@ -99,7 +119,7 @@ export class AuthController {
     })
     loginRequest: LoginSchema,
   ): Promise<Response> {
-    const {data, code} = await autentikigo.login(
+    const {data, code, message} = await autentikigo.login(
       {
         user: loginRequest.user,
         password: loginRequest.password,
@@ -112,7 +132,16 @@ export class AuthController {
       },
     );
 
-    return this.response.status(code).send(data);
+    return this.response.status(code).send(
+      _.isEmpty(data)
+        ? {
+          error: {
+            statusCode: code,
+            message: message,
+          },
+        }
+        : data,
+    );
   }
 
   @post('auth/register')
@@ -190,7 +219,7 @@ export class AuthController {
     return this.response;
   }
 
-  @get('auth/getUser/{token}')
+  @get('auth/get-user/{token}')
   async getUserInfo(
     @param.path.string('token') token: string,
   ): Promise<Response> {
@@ -214,7 +243,7 @@ export class AuthController {
     return this.response.status(code).send(data);
   }
 
-  @get('auth/refreshToken/{refreshToken}')
+  @get('auth/refresh-token/{refreshToken}')
   async refreshToken(
     @param.path.string('refreshToken') refreshToken: string,
   ): Promise<Response> {
@@ -241,6 +270,78 @@ export class AuthController {
         }
         :
         newToken.data
+    );
+
+    return this.response;
+  }
+
+  @post('auth/password-recovery-token')
+  async generatePasswordRecoveryToken(
+    @requestBody({
+      content: {
+        'application/json': {
+          schema: getModelSchemaRef(PasswordRecoveryTokenSchema),
+        },
+      },
+    })
+    passwordRecoveryTokenRequest: PasswordRecoveryTokenSchema,
+  ): Promise<Response> {
+    const passwordRecoveryToken = await autentikigo.generateRecoveryPasswordToken(
+      {
+        email: passwordRecoveryTokenRequest.email,
+        jwtSecret: process.env.AUTENTIKIGO_JWT_SECRET,
+      },
+      {
+        connectionString: process.env.AUTENTIKIGO_CONNECTION_STRING,
+      },
+    );
+
+    this.response.status(passwordRecoveryToken.code).send(
+      _.isEmpty(passwordRecoveryToken.data)
+        ? {
+          error: {
+            statusCode: passwordRecoveryToken.code,
+            message: passwordRecoveryToken.message,
+          },
+        }
+        : passwordRecoveryToken.data,
+    );
+
+    return this.response;
+  }
+
+  @post('auth/recover-password/{token}')
+  async recoverPassword(
+    @param.path.string('token') token: string,
+    @requestBody({
+      content: {
+        'application/json': {
+          schema: getModelSchemaRef(RecoverPasswordSchema),
+        },
+      },
+    })
+    recoverPasswordRequest: RecoverPasswordSchema,
+  ): Promise<Response> {
+    const recoverPassword = await autentikigo.changePassword(
+      {
+        password: recoverPasswordRequest.newPassword,
+        recoveryPasswordToken: token,
+        jwtSecret: process.env.AUTENTIKIGO_JWT_SECRET,
+      },
+      {
+        connectionString: process.env.AUTENTIKIGO_CONNECTION_STRING,
+      },
+    );
+
+    this.response.status(recoverPassword.code).send(
+      recoverPassword.code !== 200
+        ? {
+          error: {
+            statusCode: recoverPassword.code,
+            message: recoverPassword.message,
+          },
+        }
+        : recoverPassword.message,
     );
 
     return this.response;
