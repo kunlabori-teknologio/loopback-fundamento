@@ -3,7 +3,6 @@
 import {inject, service} from '@loopback/core';
 import {Entity, model, property} from '@loopback/repository';
 import {
-  get,
   getModelSchemaRef,
   param,
   post,
@@ -30,6 +29,12 @@ export class LoginSchema extends Entity {
     required: true,
   })
   password: string;
+
+  @property({
+    type: 'string',
+    required: true,
+  })
+  projectId: string;
 }
 
 @model()
@@ -80,6 +85,12 @@ export class AuthorizeSchema extends Entity {
     required: true,
   })
   acl: string;
+
+  @property({
+    type: 'string',
+    required: true,
+  })
+  projectId: string;
 }
 
 @model()
@@ -100,6 +111,15 @@ export class RecoverPasswordSchema extends Entity {
     required: true,
   })
   newPassword: string;
+}
+
+@model()
+export class ProjectIdSchema extends Entity {
+  @property({
+    type: 'string',
+    required: true,
+  })
+  projectId: string;
 }
 
 export class AuthController {
@@ -123,7 +143,7 @@ export class AuthController {
       {
         user: loginRequest.user,
         password: loginRequest.password,
-        projectId: process.env.AUTENTIKIGO_PROJECT_ID,
+        projectId: loginRequest.projectId,
         jwtSecret: process.env.AUTENTIKIGO_JWT_SECRET,
         jwtRefreshSecret: process.env.AUTENTIKIGO_JWT_REFRESH_SECRET,
       },
@@ -198,7 +218,7 @@ export class AuthController {
         userId: authorizeRequest.userId,
         verified: authorizeRequest.verified,
         acl: authorizeRequest.acl,
-        projectId: process.env.AUTENTIKIGO_PROJECT_ID,
+        projectId: authorizeRequest.projectId,
       },
       {
         connectionString: process.env.AUTENTIKIGO_CONNECTION_STRING,
@@ -219,15 +239,23 @@ export class AuthController {
     return this.response;
   }
 
-  @get('auth/get-user/{token}')
+  @post('auth/get-user/{token}')
   async getUserInfo(
     @param.path.string('token') token: string,
+    @requestBody({
+      content: {
+        'application/json': {
+          schema: getModelSchemaRef(ProjectIdSchema),
+        },
+      },
+    })
+    getUserRequest: ProjectIdSchema,
   ): Promise<Response> {
     const {data, code} = await autentikigo.getUserInfo(
       {
         token: token,
         jwtSecret: process.env.AUTENTIKIGO_JWT_SECRET,
-        projectId: process.env.AUTENTIKIGO_PROJECT_ID,
+        projectId: getUserRequest.projectId,
       },
       {
         connectionString: process.env.AUTENTIKIGO_CONNECTION_STRING,
@@ -243,9 +271,17 @@ export class AuthController {
     return this.response.status(code).send(data);
   }
 
-  @get('auth/refresh-token/{refreshToken}')
+  @post('auth/refresh-token/{refreshToken}')
   async refreshToken(
     @param.path.string('refreshToken') refreshToken: string,
+    @requestBody({
+      content: {
+        'application/json': {
+          schema: getModelSchemaRef(ProjectIdSchema),
+        },
+      },
+    })
+    refreshTokenRequest: ProjectIdSchema,
   ): Promise<Response> {
 
     const newToken = await autentikigo.refreshToken(
@@ -253,7 +289,7 @@ export class AuthController {
         refreshToken: refreshToken,
         jwtSecret: process.env.AUTENTIKIGO_JWT_SECRET,
         jwtRefreshSecret: process.env.AUTENTIKIGO_JWT_REFRESH_SECRET,
-        projectId: process.env.AUTENTIKIGO_PROJECT_ID,
+        projectId: refreshTokenRequest.projectId,
       },
       {
         connectionString: process.env.AUTENTIKIGO_CONNECTION_STRING
