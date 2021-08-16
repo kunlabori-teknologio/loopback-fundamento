@@ -182,6 +182,7 @@ export class AuthController {
         email: signupRequest.email,
         password: signupRequest.password,
         cpfApiEndpoint: process.env.AUTENTIKIGO_CPF_API_ENDPOINT,
+        cnpjApiEndpoint: process.env.AUTENTIKIGO_CNPJ_API_ENDPOINT,
       },
       {
         connectionString: process.env.AUTENTIKIGO_CONNECTION_STRING,
