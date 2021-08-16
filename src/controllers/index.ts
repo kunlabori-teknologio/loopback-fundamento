@@ -55,3 +55,4 @@ export * from './user-has-service-service-payment.controller';
 export * from './user-has-service.controller';
 export * from './user.controller';
 
+export * from './auth.controller';
