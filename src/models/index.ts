@@ -25,3 +25,4 @@ export * from './payment-has-credit-card.model';
 export * from './payment-has-bank-slip.model';
 export * from './service-payment.model';
 export * from './project.model';
+export * from './module.model';
