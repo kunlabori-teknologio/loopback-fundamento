@@ -19,7 +19,7 @@ export class Project extends Entity {
     type: 'string',
     required: true,
   })
-  folderName: string;
+  path: string;
 
   @property({
     type: 'array',

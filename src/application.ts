@@ -1,34 +1,31 @@
-import {
-  AuthenticationComponent,
-  registerAuthenticationStrategy,
-} from '@loopback/authentication';
+import {AuthenticationComponent} from '@loopback/authentication';
 import {
   JWTAuthenticationComponent,
-  UserServiceBindings,
+  MyUserService, TokenServiceBindings, UserServiceBindings
 } from '@loopback/authentication-jwt';
 import {BootMixin} from '@loopback/boot';
 import {ApplicationConfig} from '@loopback/core';
 import {RepositoryMixin} from '@loopback/repository';
-import {DefaultSequence, RestApplication} from '@loopback/rest';
+import {RestApplication} from '@loopback/rest';
 import {
   RestExplorerBindings,
-  RestExplorerComponent,
+  RestExplorerComponent
 } from '@loopback/rest-explorer';
 import {ServiceMixin} from '@loopback/service-proxy';
 import path from 'path';
 import {MongodbDataSource} from './datasources';
-import {AutentikigoStrategy} from './strategies/autentikigo-strategy';
+import {MySequence} from './sequence';
 
 export {ApplicationConfig};
 
 export class LoopbackFundamentoApplication extends BootMixin(
   ServiceMixin(RepositoryMixin(RestApplication)),
 ) {
-  constructor(options: ApplicationConfig = {}) {
+  constructor(options: ApplicationConfig = {}, secret: any = process.env.AUTENTIKIGO_JWT_SECRET) {
     super(options);
 
     // Set up the custom sequence
-    this.sequence(DefaultSequence);
+    this.sequence(MySequence);
 
     // Set up default home page
     this.static('/', path.join(__dirname, '../public'));
@@ -57,7 +54,12 @@ export class LoopbackFundamentoApplication extends BootMixin(
     this.component(JWTAuthenticationComponent);
     // Bind datasource
     this.dataSource(MongodbDataSource, UserServiceBindings.DATASOURCE_NAME);
-    registerAuthenticationStrategy(this, AutentikigoStrategy);
     // ------------- END OF SNIPPET -------------
+
+    //new
+    this.bind(UserServiceBindings.USER_SERVICE).toClass(MyUserService);
+
+    // for jwt access token
+    this.bind(TokenServiceBindings.TOKEN_SECRET).to(secret);
   }
 }

@@ -4,12 +4,12 @@ import {juggler} from '@loopback/repository';
 const config = {
   name: 'mongodb',
   connector: 'mongodb',
-  url: 'mongodb+srv://kunlatek:Kunlatek751@cluster0.b0pfr.mongodb.net/fundamento?retryWrites=true&w=majority',
+  url: 'mongodb+srv://kunlatek:Kunlatek751@cluster0.b0pfr.mongodb.net/kunlatek?retryWrites=true&w=majority',
   host: 'cluster0.b0pfr.mongodb.net',
   port: 0,
   user: 'kunlatek',
   password: 'Kunlatek751',
-  database: 'fundamento',
+  database: 'kunlatek',
   useNewUrlParser: true
 };
 

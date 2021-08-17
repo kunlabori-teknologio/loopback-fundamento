@@ -56,12 +56,14 @@
     "@loopback/repository": "^3.7.1",
     "@loopback/rest": "^10.0.0",
     "@loopback/rest-explorer": "^3.3.2",
+    "@loopback/security": "^0.5.2",
     "@loopback/service-proxy": "^3.2.2",
     "@types/jsonwebtoken": "^8.5.1",
     "autentikigo": "^0.0.6",
     "dotenv": "^8.2.0",
     "jsonwebtoken": "^8.5.1",
     "loopback-connector-mongodb": "^5.5.0",
+    "save": "^2.4.0",
     "tslib": "^2.0.0"
   },
   "devDependencies": {
