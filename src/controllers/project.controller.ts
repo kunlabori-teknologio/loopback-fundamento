@@ -69,7 +69,7 @@ export class ProjectController {
   async find(
     @param.filter(Project) filter?: Filter<Project>,
   ): Promise<Project[]> {
-    return this.projectRepository.find(filter);
+    return this.projectRepository.find({...filter, include: ['modules']});
   }
 
   @patch('/projects')

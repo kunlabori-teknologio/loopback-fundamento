@@ -1,4 +1,5 @@
-import {Entity, model, property} from '@loopback/repository';
+import {Entity, hasMany, model, property} from '@loopback/repository';
+import {Module} from './module.model';
 
 @model()
 export class Project extends Entity {
@@ -6,6 +7,7 @@ export class Project extends Entity {
     type: 'string',
     id: true,
     generated: true,
+    mongodb: {dataType: 'ObjectId'}
   })
   id?: string;
 
@@ -21,11 +23,12 @@ export class Project extends Entity {
   })
   path: string;
 
-  @property({
-    type: 'array',
-    itemType: 'string',
-  })
-  modules?: string[];
+  // @property({
+  //   type: 'array',
+  //   itemType: Module,
+  // })
+  @hasMany(() => Module)
+  modules?: Module[];
 
   @property({
     type: 'date',

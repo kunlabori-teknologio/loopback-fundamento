@@ -6,6 +6,7 @@ export class Module extends Entity {
     type: 'string',
     id: true,
     generated: true,
+    mongodb: {dataType: 'ObjectId'}
   })
   id?: string;
 
@@ -21,6 +22,11 @@ export class Module extends Entity {
   })
   components?: string[];
 
+  @property({
+    type: 'string',
+    mongodb: {dataType: 'ObjectId'}
+  })
+  projectId: string;
 
   constructor(data?: Partial<Module>) {
     super(data);
