@@ -28,6 +28,34 @@ export class Module extends Entity {
   })
   projectId: string;
 
+  @property({
+    type: 'date',
+    deafult: () => null,
+  })
+  _deletedAt?: Date;
+
+  @property({
+    type: 'string',
+    deafult: () => null,
+  })
+  _deletedBy?: string;
+
+  @property({
+    type: 'date',
+    default: () => new Date(),
+  })
+  _createdAt: Date;
+
+  @property({
+    type: 'string',
+  })
+  _createdBy: string;
+
+  @property({
+    type: 'string',
+  })
+  _ownedBy: string;
+
   constructor(data?: Partial<Module>) {
     super(data);
   }

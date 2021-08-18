@@ -1,10 +1,11 @@
 import {BindingScope, injectable} from '@loopback/core';
+import {verify} from 'jsonwebtoken';
 import _ from 'lodash';
 import {UserPermission, UserRoute} from '../models';
 
 @injectable({scope: BindingScope.TRANSIENT})
 export class AuthService {
-  constructor() {}
+  constructor() { }
 
   getRoutesFromPermissions(permissions: UserPermission[]) {
     const flatRoutes = permissions.flatMap(permission => permission.routes);
@@ -28,5 +29,11 @@ export class AuthService {
     });
 
     return routes;
+  }
+
+  async getUserId(token: string) {
+    const secret = process.env.AUTENTIKIGO_JWT_SECRET;
+    const decoded = await verify(<string>token.split(' ')[1], <string>secret);
+    return (<any>decoded).id;
   }
 }

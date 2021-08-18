@@ -1,4 +1,5 @@
 import {authenticate} from '@loopback/authentication';
+import {service} from '@loopback/core';
 import {
   Count,
   CountSchema,
@@ -14,12 +15,15 @@ import {
 } from '@loopback/rest';
 import {Project} from '../models';
 import {ProjectRepository} from '../repositories';
+import {AuthService} from '../services';
 
 @authenticate('jwt')
 export class ProjectController {
   constructor(
     @repository(ProjectRepository)
     public projectRepository: ProjectRepository,
+
+    @service(AuthService) public authService: AuthService,
   ) { }
 
   @post('/projects')
@@ -28,6 +32,7 @@ export class ProjectController {
     content: {'application/json': {schema: getModelSchemaRef(Project)}},
   })
   async create(
+    @param.header.string('Authorization') authorization: string,
     @requestBody({
       content: {
         'application/json': {
@@ -40,7 +45,12 @@ export class ProjectController {
     })
     project: Omit<Project, 'id'>,
   ): Promise<Project> {
-    return this.projectRepository.create(project);
+    var userId: string = await this.authService.getUserId(authorization);
+    return this.projectRepository.create({
+      ...project,
+      _createdBy: userId,
+      _ownedBy: userId,
+    });
   }
 
   @get('/projects/count')

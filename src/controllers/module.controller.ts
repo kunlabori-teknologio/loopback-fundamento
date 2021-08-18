@@ -1,30 +1,30 @@
+import {authenticate} from '@loopback/authentication';
+import {service} from '@loopback/core';
 import {
   Count,
   CountSchema,
   Filter,
   FilterExcludingWhere,
   repository,
-  Where,
+  Where
 } from '@loopback/repository';
 import {
-  post,
-  param,
-  get,
-  getModelSchemaRef,
-  patch,
-  put,
-  del,
-  requestBody,
-  response,
+  del, get,
+  getModelSchemaRef, param, patch, post, put, requestBody,
+  response
 } from '@loopback/rest';
 import {Module} from '../models';
 import {ModuleRepository} from '../repositories';
+import {AuthService} from '../services';
 
+@authenticate('jwt')
 export class ModuleController {
   constructor(
     @repository(ModuleRepository)
-    public moduleRepository : ModuleRepository,
-  ) {}
+    public moduleRepository: ModuleRepository,
+
+    @service(AuthService) public authService: AuthService,
+  ) { }
 
   @post('/modules')
   @response(200, {
@@ -32,6 +32,7 @@ export class ModuleController {
     content: {'application/json': {schema: getModelSchemaRef(Module)}},
   })
   async create(
+    @param.header.string('Authorization') authorization: string,
     @requestBody({
       content: {
         'application/json': {
@@ -44,7 +45,12 @@ export class ModuleController {
     })
     module: Omit<Module, 'id'>,
   ): Promise<Module> {
-    return this.moduleRepository.create(module);
+    var userId: string = await this.authService.getUserId(authorization);
+    return this.moduleRepository.create({
+      ...module,
+      _createdBy: userId,
+      _ownedBy: userId,
+    });
   }
 
   @get('/modules/count')

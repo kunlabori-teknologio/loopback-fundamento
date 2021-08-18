@@ -46,13 +46,11 @@ export class Project extends Entity {
 
   @property({
     type: 'string',
-    required: true,
   })
   _createdBy: string;
 
   @property({
     type: 'string',
-    required: true,
   })
   _ownedBy: string;
 
