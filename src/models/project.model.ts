@@ -23,28 +23,26 @@ export class Project extends Entity {
   })
   path: string;
 
-  // @property({
-  //   type: 'array',
-  //   itemType: Module,
-  // })
   @hasMany(() => Module)
   modules?: Module[];
 
   @property({
     type: 'date',
+    deafult: () => null,
   })
-  _deletedAt?: string;
+  _deletedAt?: Date;
 
   @property({
     type: 'string',
+    deafult: () => null,
   })
   _deletedBy?: string;
 
   @property({
     type: 'date',
-    required: true,
+    default: () => new Date(),
   })
-  _createdAt: string;
+  _createdAt: Date;
 
   @property({
     type: 'string',
