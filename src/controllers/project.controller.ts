@@ -14,7 +14,7 @@ import {
   response
 } from '@loopback/rest';
 import {Project} from '../models';
-import {ProjectRepository} from '../repositories';
+import {ModuleRepository, ProjectRepository} from '../repositories';
 import {AuthService} from '../services';
 
 @authenticate('jwt')
@@ -22,6 +22,9 @@ export class ProjectController {
   constructor(
     @repository(ProjectRepository)
     public projectRepository: ProjectRepository,
+
+    @repository(ModuleRepository)
+    public moduleRepository: ModuleRepository,
 
     @service(AuthService) public authService: AuthService,
   ) { }
@@ -79,7 +82,18 @@ export class ProjectController {
   async find(
     @param.filter(Project) filter?: Filter<Project>,
   ): Promise<Project[]> {
-    return this.projectRepository.find({...filter, include: ['modules']});
+
+    // Get all modules to populate projects
+    var modules = await this.moduleRepository.find();
+
+    // Get projects and populate modules field with data from modules repository
+    var projects = await this.projectRepository.find(filter);
+    projects = projects.map(project => {
+      project.modules = modules.filter(module => project.modules?.map(el => el.toString()).includes(module.id?.toString()));
+      return project;
+    });
+
+    return projects;
   }
 
   @patch('/projects')

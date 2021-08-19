@@ -23,12 +23,6 @@ export class Module extends Entity {
   components?: string[];
 
   @property({
-    type: 'string',
-    mongodb: {dataType: 'ObjectId'}
-  })
-  projectId: string;
-
-  @property({
     type: 'date',
     deafult: () => null,
   })
