@@ -14,7 +14,7 @@ import {
   response
 } from '@loopback/rest';
 import {Module} from '../models';
-import {ModuleRepository} from '../repositories';
+import {ComponentRepository, ModuleRepository} from '../repositories';
 import {AuthService} from '../services';
 
 @authenticate('jwt')
@@ -22,6 +22,9 @@ export class ModuleController {
   constructor(
     @repository(ModuleRepository)
     public moduleRepository: ModuleRepository,
+
+    @repository(ComponentRepository)
+    public componentRepository: ComponentRepository,
 
     @service(AuthService) public authService: AuthService,
   ) { }
@@ -79,7 +82,18 @@ export class ModuleController {
   async find(
     @param.filter(Module) filter?: Filter<Module>,
   ): Promise<Module[]> {
-    return this.moduleRepository.find(filter);
+
+    // Get all components to populate modules
+    var components = await this.componentRepository.find();
+
+    // Get modules and populate components field with data from component repository
+    var modules = await this.moduleRepository.find(filter);
+    modules = modules.map(module => {
+      module.components = components.filter(component => module.components?.map(el => el.toString()).includes(component.id?.toString()));
+      return module;
+    });
+
+    return modules;
   }
 
   @patch('/modules')

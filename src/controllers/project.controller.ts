@@ -14,17 +14,16 @@ import {
   response
 } from '@loopback/rest';
 import {Project} from '../models';
-import {ModuleRepository, ProjectRepository} from '../repositories';
+import {ProjectRepository} from '../repositories';
 import {AuthService} from '../services';
+import {ModuleService} from '../services/module.service';
 
 @authenticate('jwt')
 export class ProjectController {
   constructor(
-    @repository(ProjectRepository)
-    public projectRepository: ProjectRepository,
+    @repository(ProjectRepository) public projectRepository: ProjectRepository,
 
-    @repository(ModuleRepository)
-    public moduleRepository: ModuleRepository,
+    @service(ModuleService) public moduleService: ModuleService,
 
     @service(AuthService) public authService: AuthService,
   ) { }
@@ -84,7 +83,7 @@ export class ProjectController {
   ): Promise<Project[]> {
 
     // Get all modules to populate projects
-    var modules = await this.moduleRepository.find();
+    var modules = await this.moduleService.findAndPopulate();
 
     // Get projects and populate modules field with data from modules repository
     var projects = await this.projectRepository.find(filter);

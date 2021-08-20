@@ -23,8 +23,8 @@ export class Project extends Entity {
   path: string;
 
   @property({
-    type: 'any',
-    itemType: 'string'
+    type: 'array',
+    itemType: 'any'
   })
   modules?: any[];
 

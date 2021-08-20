@@ -263,12 +263,6 @@ export class AuthController {
       },
     );
 
-    // Get permissions from autentikigo
-    // const permissions = defaultPermissions as UserPermission[];
-
-    // const routes = this.authService.getRoutesFromPermissions(permissions);
-
-    // return this.response.status(code).send({...data, permissions, routes});
     return this.response.status(code).send(data);
   }
 

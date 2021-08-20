@@ -18,9 +18,9 @@ export class Module extends Entity {
 
   @property({
     type: 'array',
-    itemType: 'string',
+    itemType: 'any',
   })
-  components?: string[];
+  components?: any[];
 
   @property({
     type: 'date',
