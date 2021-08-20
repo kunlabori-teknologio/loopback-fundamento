@@ -62,10 +62,10 @@ export class Component extends Entity {
     type: 'string',
     required: true,
     jsonSchema: {
-      enum: ['form', 'list'],
+      enum: ['form', 'table'],
     },
   })
-  type: string;
+  formType: string;
 
   @property({
     type: 'array',
