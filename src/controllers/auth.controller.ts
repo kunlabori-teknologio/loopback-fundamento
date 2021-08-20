@@ -3,10 +3,12 @@
 import {inject, service} from '@loopback/core';
 import {Entity, model, property} from '@loopback/repository';
 import {
+  get,
   getModelSchemaRef,
   param,
   post,
   requestBody,
+  response,
   Response,
   RestBindings
 } from '@loopback/rest';
@@ -113,15 +115,6 @@ export class RecoverPasswordSchema extends Entity {
   newPassword: string;
 }
 
-@model()
-export class ProjectIdSchema extends Entity {
-  @property({
-    type: 'string',
-    required: true,
-  })
-  projectId: string;
-}
-
 export class AuthController {
   constructor(
     @inject(RestBindings.Http.RESPONSE) private response: Response,
@@ -129,6 +122,20 @@ export class AuthController {
   ) { }
 
   @post('auth/login')
+  @response(200, {
+    description: 'Token and refresh token',
+    content: {
+      'application/json': {
+        schema: {
+          type: 'object',
+          example: {
+            'token': 'string',
+            'refreshToken': 'string',
+          }
+        },
+      },
+    },
+  })
   async login(
     @requestBody({
       content: {
@@ -240,23 +247,64 @@ export class AuthController {
     return this.response;
   }
 
-  @post('auth/get-user/{token}')
-  async getUserInfo(
-    @param.path.string('token') token: string,
-    @requestBody({
-      content: {
-        'application/json': {
-          schema: getModelSchemaRef(ProjectIdSchema),
+  @get('auth/get-user/{token}')
+  @response(200, {
+    description: 'Full user information',
+    content: {
+      'application/json': {
+        schema: {
+          type: 'object',
+          example: {
+            "type": "string",
+            "_id": "string",
+            "email": "string",
+            "personInfo": {
+              "country": "string",
+              "_id": "string",
+              "name": "string",
+              "uniqueId": "string",
+              "birthday": "string",
+              "gender": "string",
+              "mother": "string",
+              "username": "string"
+            },
+            "acl": {
+              "_id": "string",
+              "projectId": "string",
+              "name": "string",
+              "permissions": [
+                {
+                  "actions": [
+                    {
+                      "_id": "string",
+                      "name": "string"
+                    },
+                  ],
+                  "moduleId": {
+                    "_id": "string",
+                    "name": "string",
+                    "menu": {
+                      "_id": "string",
+                      "name": "string",
+                      "route": "string"
+                    }
+                  }
+                },
+              ]
+            },
+            "verified": "boolean"
+          }
         },
       },
-    })
-    getUserRequest: ProjectIdSchema,
+    },
+  })
+  async getUserInfo(
+    @param.path.string('token') token: string,
   ): Promise<Response> {
     const {data, code} = await autentikigo.getUserInfo(
       {
         token: token,
         jwtSecret: process.env.AUTENTIKIGO_JWT_SECRET,
-        projectId: getUserRequest.projectId,
       },
       {
         connectionString: process.env.AUTENTIKIGO_CONNECTION_STRING,
@@ -266,17 +314,23 @@ export class AuthController {
     return this.response.status(code).send(data);
   }
 
-  @post('auth/refresh-token/{refreshToken}')
-  async refreshToken(
-    @param.path.string('refreshToken') refreshToken: string,
-    @requestBody({
-      content: {
-        'application/json': {
-          schema: getModelSchemaRef(ProjectIdSchema),
+  @get('auth/refresh-token/{refreshToken}')
+  @response(200, {
+    description: 'New token and refresh token',
+    content: {
+      'application/json': {
+        schema: {
+          type: 'object',
+          example: {
+            'token': 'string',
+            'refreshToken': 'string',
+          }
         },
       },
-    })
-    refreshTokenRequest: ProjectIdSchema,
+    },
+  })
+  async refreshToken(
+    @param.path.string('refreshToken') refreshToken: string,
   ): Promise<Response> {
 
     const newToken = await autentikigo.refreshToken(
@@ -284,7 +338,6 @@ export class AuthController {
         refreshToken: refreshToken,
         jwtSecret: process.env.AUTENTIKIGO_JWT_SECRET,
         jwtRefreshSecret: process.env.AUTENTIKIGO_JWT_REFRESH_SECRET,
-        projectId: refreshTokenRequest.projectId,
       },
       {
         connectionString: process.env.AUTENTIKIGO_CONNECTION_STRING
