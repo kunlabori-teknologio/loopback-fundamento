@@ -29,6 +29,11 @@ export class Project extends Entity {
   modules?: any[];
 
   @property({
+    type: 'string',
+  })
+  tokenTtl: string;
+
+  @property({
     type: 'date',
     deafult: () => null,
   })
